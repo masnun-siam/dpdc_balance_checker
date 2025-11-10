@@ -66,38 +66,38 @@ class _HomeScreenState extends State<HomeScreen> {
       final balanceDetails =
           await _apiService.fetchBalanceDetails(customerId);
 
-      if (!mounted) return;
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
 
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Navigate to balance screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BalanceScreen(
-            balanceDetails: balanceDetails,
-            customerId: customerId,
+        // Navigate to balance screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BalanceScreen(
+              balanceDetails: balanceDetails,
+              customerId: customerId,
+            ),
           ),
-        ),
-      ).then((_) {
-        // Reload saved IDs when returning from balance screen
-        _loadSavedIds();
-      });
+        ).then((_) {
+          // Reload saved IDs when returning from balance screen
+          _loadSavedIds();
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
 
-      setState(() {
-        _isLoading = false;
-      });
-
-      ErrorDialog.show(
-        context,
-        title: 'Error',
-        message: e.toString().replaceAll('Exception: ', ''),
-        onRetry: _checkBalance,
-      );
+        ErrorDialog.show(
+          context,
+          title: 'Error',
+          message: e.toString().replaceAll('Exception: ', ''),
+          onRetry: _checkBalance,
+        );
+      }
     }
   }
 
