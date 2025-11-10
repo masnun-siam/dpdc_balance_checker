@@ -29,7 +29,7 @@ class DpdcApiService {
             const Duration(seconds: 30),
           );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
         final token = data['token'];
         if (token == null || token.isEmpty) {
