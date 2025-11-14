@@ -41,20 +41,20 @@ class DpdcApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
-        final token = data['token'];
-        final refresh = data['refreshToken'];
-        final ttl = data['ttl'];
+        final token = data['access_token'];
+        final refresh = data['refresh_token'];
+        final expiresIn = data['expires_in'];
 
         if (token == null || token.isEmpty) {
           throw Exception('Token not found in response');
         }
 
         // Save tokens if we have all required data
-        if (refresh != null && ttl != null) {
+        if (refresh != null && expiresIn != null) {
           await _storageService.saveTokens(
             accessToken: token,
             refreshToken: refresh,
-            ttl: ttl is int ? ttl : int.parse(ttl.toString()),
+            ttl: expiresIn is int ? expiresIn : int.parse(expiresIn.toString()),
           );
         }
 
