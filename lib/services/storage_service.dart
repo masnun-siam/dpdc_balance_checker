@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StorageService {
   static const String _savedIdsKey = 'saved_customer_ids';
   static const String _idsLabelsKey = 'customer_ids_labels';
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _tokenExpiryKey = 'token_expiry';
 
   /// Save a customer ID with an optional label
   Future<void> saveCustomerId(String id, {String? label}) async {
@@ -108,6 +111,72 @@ class StorageService {
       await prefs.remove(_idsLabelsKey);
     } catch (e) {
       throw Exception('Failed to clear data: ${e.toString()}');
+    }
+  }
+
+  /// Save authentication tokens
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+    required int ttl,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_accessTokenKey, accessToken);
+      await prefs.setString(_refreshTokenKey, refreshToken);
+
+      // Calculate expiry time (current time + TTL in seconds)
+      final expiryTime = DateTime.now().millisecondsSinceEpoch + (ttl * 1000);
+      await prefs.setInt(_tokenExpiryKey, expiryTime);
+    } catch (e) {
+      throw Exception('Failed to save tokens: ${e.toString()}');
+    }
+  }
+
+  /// Get stored access token
+  Future<String?> getAccessToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_accessTokenKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get stored refresh token
+  Future<String?> getRefreshToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_refreshTokenKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Check if the current token is expired
+  Future<bool> isTokenExpired() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final expiryTime = prefs.getInt(_tokenExpiryKey);
+
+      if (expiryTime == null) return true;
+
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      return currentTime >= expiryTime;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  /// Clear stored tokens
+  Future<void> clearTokens() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_accessTokenKey);
+      await prefs.remove(_refreshTokenKey);
+      await prefs.remove(_tokenExpiryKey);
+    } catch (e) {
+      throw Exception('Failed to clear tokens: ${e.toString()}');
     }
   }
 }
