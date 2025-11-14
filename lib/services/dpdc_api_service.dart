@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/balance_details.dart';
+import 'storage_service.dart';
 
 class DpdcApiService {
   static const String _authUrl =
@@ -11,30 +12,52 @@ class DpdcApiService {
   static const String _clientSecret = '0yFsAl4nN9jX1GGkgOrvpUxDarf2DT40';
   static const String _tenantCode = 'DPDC';
 
+  final StorageService _storageService = StorageService();
+
   /// Generate bearer token from DPDC auth endpoint
-  Future<String> generateBearerToken() async {
+  Future<String> generateBearerToken({String? refreshToken}) async {
     try {
+      final headers = {
+        'Content-Type': 'application/json;charset=UTF-8',
+        'clientId': _clientId,
+        'clientSecret': _clientSecret,
+        'tenantCode': _tenantCode,
+      };
+
+      // If refresh token is provided, add it to headers
+      if (refreshToken != null) {
+        headers['Authorization'] = 'Bearer $refreshToken';
+      }
+
       final response = await http
           .post(
             Uri.parse(_authUrl),
-            headers: {
-              'Content-Type': 'application/json;charset=UTF-8',
-              'clientId': _clientId,
-              'clientSecret': _clientSecret,
-              'tenantCode': _tenantCode,
-            },
+            headers: headers,
             body: json.encode({}),
           )
           .timeout(
-            const Duration(seconds: 30),
+            const Duration(minutes: 5),
           );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
-        final token = data['token'];
+        final token = data['access_token'];
+        final refresh = data['refresh_token'];
+        final expiresIn = data['expires_in'];
+
         if (token == null || token.isEmpty) {
           throw Exception('Token not found in response');
         }
+
+        // Save tokens if we have all required data
+        if (refresh != null && expiresIn != null) {
+          await _storageService.saveTokens(
+            accessToken: token,
+            refreshToken: refresh,
+            ttl: expiresIn is int ? expiresIn : int.parse(expiresIn.toString()),
+          );
+        }
+
         return token;
       } else {
         throw Exception(
@@ -50,11 +73,40 @@ class DpdcApiService {
     }
   }
 
+  /// Get a valid access token (from cache or by refreshing)
+  Future<String> _getValidAccessToken() async {
+    // Check if we have a stored token
+    final storedToken = await _storageService.getAccessToken();
+    final isExpired = await _storageService.isTokenExpired();
+
+    // If we have a valid non-expired token, use it
+    if (storedToken != null && !isExpired) {
+      return storedToken;
+    }
+
+    // If token is expired, try to refresh it
+    if (storedToken != null && isExpired) {
+      final refreshToken = await _storageService.getRefreshToken();
+      if (refreshToken != null) {
+        try {
+          // Try to refresh the token
+          return await generateBearerToken(refreshToken: refreshToken);
+        } catch (e) {
+          // If refresh fails, generate a new token
+          return await generateBearerToken();
+        }
+      }
+    }
+
+    // No valid token, generate a new one
+    return await generateBearerToken();
+  }
+
   /// Fetch balance details using customer ID
   Future<BalanceDetails> fetchBalanceDetails(String customerId) async {
     try {
-      // First, generate the bearer token
-      final token = await generateBearerToken();
+      // Get a valid bearer token (from cache or generate new)
+      final token = await _getValidAccessToken();
 
       // GraphQL query for balance details
       final query = '''
@@ -89,7 +141,7 @@ query {
             body: json.encode({'query': query}),
           )
           .timeout(
-            const Duration(seconds: 30),
+            const Duration(minutes: 5),
           );
 
       if (response.statusCode == 200) {
