@@ -18,14 +18,45 @@ class BalanceScreen extends StatefulWidget {
   State<BalanceScreen> createState() => _BalanceScreenState();
 }
 
-class _BalanceScreenState extends State<BalanceScreen> {
+class _BalanceScreenState extends State<BalanceScreen>
+    with TickerProviderStateMixin {
   final StorageService _storageService = StorageService();
   bool _isSaved = false;
+
+  late AnimationController _fadeController;
+  late AnimationController _balanceScaleController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _balanceScaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _checkIfSaved();
+
+    // Initialize animations
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
+
+    _balanceScaleController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _balanceScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _balanceScaleController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    // Start animations
+    _fadeController.forward();
+    _balanceScaleController.forward();
   }
 
   Future<void> _checkIfSaved() async {
@@ -183,210 +214,335 @@ Checked on: $dateStr
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
             ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
+            const Spacer(),
+            ScaleTransition(
+              scale: _balanceScaleAnimation,
+              child: Hero(
+                tag: 'app_icon',
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.3),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+              ),
             ),
-            child: const Icon(
-              Icons.check_circle,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const Spacer(),
-          const SizedBox(width: 48), // Balance for back button
-        ],
+            const Spacer(),
+            const SizedBox(width: 56), // Balance for back button
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBalanceCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFF97316), // Orange
-            Color(0xFFEC4899), // Pink
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFF97316).withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          const Text(
-            'Balance Remaining',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            widget.balanceDetails.getFormattedBalance(),
-            style: const TextStyle(
-              fontSize: 56,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  widget.balanceDetails.connectionStatus.toLowerCase() ==
-                          'active'
-                      ? Icons.check_circle
-                      : Icons.warning,
-                  size: 16,
-                  color: Colors.white,
+    return ScaleTransition(
+      scale: _balanceScaleAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Hero(
+          tag: 'balance_card',
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFF97316), // Orange
+                    Color(0xFFEC4899), // Pink
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  widget.balanceDetails.connectionStatus,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFF97316).withOpacity(0.5),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
+                    spreadRadius: -5,
                   ),
-                ),
-              ],
+                ],
+              ),
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.account_balance_wallet,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Balance Remaining',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 1200),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.scale(
+                          scale: 0.8 + (0.2 * value),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Text(
+                      widget.balanceDetails.getFormattedBalance(),
+                      style: const TextStyle(
+                        fontSize: 56,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: -1,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: widget.balanceDetails.connectionStatus
+                                        .toLowerCase() ==
+                                    'active'
+                                ? Colors.green
+                                : Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            widget.balanceDetails.connectionStatus
+                                        .toLowerCase() ==
+                                    'active'
+                                ? Icons.check
+                                : Icons.priority_high,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.balanceDetails.connectionStatus,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildDetailsCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    final details = [
+      {'icon': Icons.person, 'label': 'Customer Name', 'value': widget.balanceDetails.customerName},
+      {'icon': Icons.badge, 'label': 'Account ID', 'value': widget.balanceDetails.accountId},
+      {'icon': Icons.category, 'label': 'Customer Class', 'value': widget.balanceDetails.customerClass},
+      {'icon': Icons.account_circle, 'label': 'Customer Type', 'value': widget.balanceDetails.customerType},
+      {'icon': Icons.account_balance_wallet, 'label': 'Account Type', 'value': widget.balanceDetails.accountType},
+      if (widget.balanceDetails.mobileNumber != null)
+        {'icon': Icons.phone, 'label': 'Mobile Number', 'value': widget.balanceDetails.mobileNumber!},
+      if (widget.balanceDetails.emailId != null)
+        {'icon': Icons.email, 'label': 'Email', 'value': widget.balanceDetails.emailId!},
+      {'icon': Icons.payments, 'label': 'Minimum Recharge', 'value': widget.balanceDetails.getFormattedMinRecharge()},
+    ];
+
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.3),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _fadeController,
+          curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
+        )),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
+                spreadRadius: -5,
+              ),
+            ],
           ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Customer Information',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF3B82F6).withOpacity(0.2),
+                          const Color(0xFF8B5CF6).withOpacity(0.2),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF3B82F6),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Customer Information',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ...List.generate(details.length, (index) {
+                final detail = details[index];
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 400 + (index * 100)),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(20 * (1 - value), 0),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      if (index > 0) _buildDivider(),
+                      _buildDetailRow(
+                        detail['icon'] as IconData,
+                        detail['label'] as String,
+                        detail['value'] as String,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
           ),
-          const SizedBox(height: 20),
-          _buildDetailRow(
-            Icons.person,
-            'Customer Name',
-            widget.balanceDetails.customerName,
-          ),
-          _buildDivider(),
-          _buildDetailRow(
-            Icons.badge,
-            'Account ID',
-            widget.balanceDetails.accountId,
-          ),
-          _buildDivider(),
-          _buildDetailRow(
-            Icons.category,
-            'Customer Class',
-            widget.balanceDetails.customerClass,
-          ),
-          _buildDivider(),
-          _buildDetailRow(
-            Icons.account_circle,
-            'Customer Type',
-            widget.balanceDetails.customerType,
-          ),
-          _buildDivider(),
-          _buildDetailRow(
-            Icons.account_balance_wallet,
-            'Account Type',
-            widget.balanceDetails.accountType,
-          ),
-          if (widget.balanceDetails.mobileNumber != null) ...[
-            _buildDivider(),
-            _buildDetailRow(
-              Icons.phone,
-              'Mobile Number',
-              widget.balanceDetails.mobileNumber!,
-            ),
-          ],
-          if (widget.balanceDetails.emailId != null) ...[
-            _buildDivider(),
-            _buildDetailRow(
-              Icons.email,
-              'Email',
-              widget.balanceDetails.emailId!,
-            ),
-          ],
-          _buildDivider(),
-          _buildDetailRow(
-            Icons.payments,
-            'Minimum Recharge',
-            widget.balanceDetails.getFormattedMinRecharge(),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF3B82F6).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF3B82F6).withOpacity(0.15),
+                  const Color(0xFF8B5CF6).withOpacity(0.15),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Icon(
               icon,
               color: const Color(0xFF3B82F6),
-              size: 20,
+              size: 22,
             ),
           ),
           const SizedBox(width: 16),
@@ -397,17 +553,20 @@ Checked on: $dateStr
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   value,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
@@ -426,30 +585,60 @@ Checked on: $dateStr
   }
 
   Widget _buildActionButtons() {
-    return Column(
-      children: [
-        if (!_isSaved)
-          _buildActionButton(
-            label: 'Save Customer ID',
-            icon: Icons.bookmark_add,
-            color: const Color(0xFF3B82F6),
-            onTap: _saveCustomerId,
-          ),
-        if (!_isSaved) const SizedBox(height: 12),
-        _buildActionButton(
-          label: 'Share Details',
-          icon: Icons.share,
-          color: const Color(0xFF10B981),
-          onTap: _shareBalance,
-        ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          label: 'Check Another',
-          icon: Icons.refresh,
-          color: const Color(0xFF8B5CF6),
-          onTap: () => Navigator.pop(context),
-        ),
-      ],
+    final buttons = [
+      if (!_isSaved)
+        {
+          'label': 'Save Customer ID',
+          'icon': Icons.bookmark_add,
+          'color': const Color(0xFF3B82F6),
+          'onTap': _saveCustomerId
+        },
+      {
+        'label': 'Share Details',
+        'icon': Icons.share,
+        'color': const Color(0xFF10B981),
+        'onTap': _shareBalance
+      },
+      {
+        'label': 'Check Another',
+        'icon': Icons.refresh,
+        'color': const Color(0xFF8B5CF6),
+        'onTap': () => Navigator.pop(context)
+      },
+    ];
+
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Column(
+        children: List.generate(buttons.length, (index) {
+          final button = buttons[index];
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 600 + (index * 150)),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 30 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              children: [
+                if (index > 0) const SizedBox(height: 14),
+                _buildActionButton(
+                  label: button['label'] as String,
+                  icon: button['icon'] as IconData,
+                  color: button['color'] as Color,
+                  onTap: button['onTap'] as VoidCallback,
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -460,15 +649,16 @@ Checked on: $dateStr
     required VoidCallback onTap,
   }) {
     return Container(
-      height: 56,
+      height: 58,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: color.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -3,
           ),
         ],
       ),
@@ -476,24 +666,44 @@ Checked on: $dateStr
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          splashColor: Colors.white.withOpacity(0.3),
+          highlightColor: Colors.white.withOpacity(0.1),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 20),
                 ),
-              ),
-            ],
+                const SizedBox(width: 14),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _balanceScaleController.dispose();
+    super.dispose();
   }
 }
