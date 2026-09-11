@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
-import 'services/notification_service.dart';
-import 'services/background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,12 +14,6 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-
-  // Initialize notification service
-  await NotificationService.initialize();
-
-  // Initialize background service (registers task if monitoring enabled)
-  await BackgroundService.initialize();
 
   runApp(const DpdcBalanceCheckerApp());
 }

@@ -7,7 +7,8 @@ class StorageService {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _tokenExpiryKey = 'token_expiry';
-  static const String _monitoringEnabledKey = 'background_monitoring_enabled';
+  static const String _turnstileCodeKey = 'turnstile_code';
+  static const String _turnstileCodeExpiryKey = 'turnstile_code_expiry';
 
   /// Save a customer ID with an optional label
   Future<void> saveCustomerId(String id, {String? label}) async {
@@ -181,23 +182,48 @@ class StorageService {
     }
   }
 
-  /// Check if background monitoring is enabled
-  Future<bool> isBackgroundMonitoringEnabled() async {
+  /// Save the cached turnstile verification code.
+  ///
+  /// TTL is provisionally 10 minutes (see [getTurnstileCode]) pending the
+  /// issue's Phase 0b measurement of the server's actual code lifetime,
+  /// which needs a live server and has not been run yet.
+  Future<void> saveTurnstileCode(String code, {required int ttl}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_monitoringEnabledKey) ?? false;
+      await prefs.setString(_turnstileCodeKey, code);
+
+      // Calculate expiry time (current time + TTL in seconds)
+      final expiryTime = DateTime.now().millisecondsSinceEpoch + (ttl * 1000);
+      await prefs.setInt(_turnstileCodeExpiryKey, expiryTime);
     } catch (e) {
-      return false;
+      throw Exception('Failed to save turnstile code: ${e.toString()}');
     }
   }
 
-  /// Set background monitoring enabled/disabled
-  Future<void> setBackgroundMonitoringEnabled(bool enabled) async {
+  /// Get the cached turnstile code, or null if missing/expired.
+  Future<String?> getTurnstileCode() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_monitoringEnabledKey, enabled);
+      final expiryTime = prefs.getInt(_turnstileCodeExpiryKey);
+      if (expiryTime == null) return null;
+
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      if (currentTime >= expiryTime) return null;
+
+      return prefs.getString(_turnstileCodeKey);
     } catch (e) {
-      throw Exception('Failed to save monitoring preference: ${e.toString()}');
+      return null;
+    }
+  }
+
+  /// Clear the cached turnstile code.
+  Future<void> clearTurnstileCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_turnstileCodeKey);
+      await prefs.remove(_turnstileCodeExpiryKey);
+    } catch (e) {
+      throw Exception('Failed to clear turnstile code: ${e.toString()}');
     }
   }
 }
