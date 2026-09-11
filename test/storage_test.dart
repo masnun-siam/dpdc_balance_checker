@@ -56,5 +56,16 @@ void main() {
       final storage = StorageService();
       expect(await storage.getTurnstileCode(), isNull);
     });
+
+    test('an empty cached code returns null, not a false cache hit',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'turnstile_code': '',
+        'turnstile_code_expiry':
+            DateTime.now().millisecondsSinceEpoch + 3600000,
+      });
+      final storage = StorageService();
+      expect(await storage.getTurnstileCode(), isNull);
+    });
   });
 }
