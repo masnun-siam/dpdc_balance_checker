@@ -210,7 +210,8 @@ class StorageService {
       final currentTime = DateTime.now().millisecondsSinceEpoch;
       if (currentTime >= expiryTime) return null;
 
-      return prefs.getString(_turnstileCodeKey);
+      final code = prefs.getString(_turnstileCodeKey);
+      return (code == null || code.isEmpty) ? null : code;
     } catch (e) {
       return null;
     }

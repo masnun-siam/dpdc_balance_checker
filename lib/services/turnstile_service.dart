@@ -165,13 +165,16 @@ Future<String> solveTurnstile(BuildContext context) async {
         },
       ),
     );
-    unawaited(controller.loadRequest(Uri.parse('https://amiapp.dpdc.org.bd/')));
+    unawaited(
+      controller
+          .loadRequest(Uri.parse('https://amiapp.dpdc.org.bd/'))
+          .catchError((_) => completeError('Verification failed, please try again.')),
+    );
   } else {
     unawaited(
-      controller.loadHtmlString(
-        turnstileHtml(),
-        baseUrl: 'https://amiapp.dpdc.org.bd',
-      ),
+      controller
+          .loadHtmlString(turnstileHtml(), baseUrl: 'https://amiapp.dpdc.org.bd')
+          .catchError((_) => completeError('Verification failed, please try again.')),
     );
   }
 
@@ -202,6 +205,10 @@ Future<String> solveTurnstile(BuildContext context) async {
     ).then((_) {
       completeError('Verification cancelled');
     });
+  } else {
+    // No context to host the sheet — this can only ever end in the 45s
+    // timeout, so fail fast instead of making the user wait for it.
+    completeError('Verification failed, please try again.');
   }
 
   return completer.future.timeout(
