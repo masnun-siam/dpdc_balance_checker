@@ -25,7 +25,7 @@ class ErrorDialog extends StatefulWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => ErrorDialog(
         title: title,
         message: message,
@@ -94,12 +94,12 @@ class _ErrorDialogState extends State<ErrorDialog>
                   gradient: LinearGradient(
                     colors: [
                       Colors.red.shade50,
-                      Colors.red.shade100.withOpacity(0.3),
+                      Colors.red.shade100.withValues(alpha: 0.3),
                     ],
                   ),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.red.withOpacity(0.3),
+                    color: Colors.red.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -192,7 +192,7 @@ class _ErrorDialogState extends State<ErrorDialog>
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: 12,
             offset: const Offset(0, 6),
             spreadRadius: -3,
@@ -204,7 +204,7 @@ class _ErrorDialogState extends State<ErrorDialog>
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(14),
-          splashColor: Colors.white.withOpacity(0.3),
+          splashColor: Colors.white.withValues(alpha: 0.3),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

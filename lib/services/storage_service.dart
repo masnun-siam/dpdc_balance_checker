@@ -7,6 +7,7 @@ class StorageService {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _tokenExpiryKey = 'token_expiry';
+  static const String _monitoringEnabledKey = 'background_monitoring_enabled';
 
   /// Save a customer ID with an optional label
   Future<void> saveCustomerId(String id, {String? label}) async {
@@ -177,6 +178,26 @@ class StorageService {
       await prefs.remove(_tokenExpiryKey);
     } catch (e) {
       throw Exception('Failed to clear tokens: ${e.toString()}');
+    }
+  }
+
+  /// Check if background monitoring is enabled
+  Future<bool> isBackgroundMonitoringEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_monitoringEnabledKey) ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Set background monitoring enabled/disabled
+  Future<void> setBackgroundMonitoringEnabled(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_monitoringEnabledKey, enabled);
+    } catch (e) {
+      throw Exception('Failed to save monitoring preference: ${e.toString()}');
     }
   }
 }

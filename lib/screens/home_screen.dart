@@ -3,6 +3,7 @@ import '../services/dpdc_api_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/error_dialog.dart';
 import 'balance_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,8 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ErrorDialog.show(
         context,
         title: 'Invalid Customer ID',
-        message:
-            'Customer ID must be numeric and between 8-12 digits long.',
+        message: 'Customer ID must be numeric and between 8-12 digits long.',
       );
       return;
     }
@@ -90,8 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
 
     try {
-      final balanceDetails =
-          await _apiService.fetchBalanceDetails(customerId);
+      final balanceDetails = await _apiService.fetchBalanceDetails(customerId);
 
       if (mounted) {
         setState(() {
@@ -104,24 +103,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 BalanceScreen(
-              balanceDetails: balanceDetails,
-              customerId: customerId,
-            ),
+                  balanceDetails: balanceDetails,
+                  customerId: customerId,
+                ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              const curve = Curves.easeInOutCubic;
-              var tween = Tween(begin: begin, end: end)
-                  .chain(CurveTween(curve: curve));
-              return SlideTransition(
-                position: animation.drive(tween),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
-              );
-            },
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOutCubic;
+                  var tween = Tween(
+                    begin: begin,
+                    end: end,
+                  ).chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
             transitionDuration: const Duration(milliseconds: 500),
           ),
         ).then((_) {
@@ -157,6 +155,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -196,13 +210,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, -0.3),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _fadeController,
-          curve: Curves.easeOutCubic,
-        )),
+        position: Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _fadeController,
+                curve: Curves.easeOutCubic,
+              ),
+            ),
         child: Column(
           children: [
             ScaleTransition(
@@ -212,11 +226,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -226,10 +240,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFF97316),
-                          Color(0xFFEC4899),
-                        ],
+                        colors: [Color(0xFFF97316), Color(0xFFEC4899)],
                       ),
                       shape: BoxShape.circle,
                     ),
@@ -259,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               'Check Your Electricity Balance',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 fontWeight: FontWeight.w400,
                 letterSpacing: 0.2,
               ),
@@ -275,20 +286,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.3),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _fadeController,
-          curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-        )),
+        position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _fadeController,
+                curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+              ),
+            ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
                 spreadRadius: -5,
@@ -306,8 +317,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF3B82F6).withOpacity(0.2),
-                          const Color(0xFF8B5CF6).withOpacity(0.2),
+                          const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                          const Color(0xFF8B5CF6).withValues(alpha: 0.2),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -354,7 +365,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     suffixIcon: _customerIdController.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear, color: Colors.grey.shade600),
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.grey.shade600,
+                            ),
                             onPressed: () {
                               setState(() {
                                 _customerIdController.clear();
@@ -369,7 +383,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade300,
+                        width: 1.5,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -422,24 +439,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.3),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _fadeController,
-          curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
-        )),
+        position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _fadeController,
+                curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+              ),
+            ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -454,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -482,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -495,7 +512,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Icon(Icons.history, size: 18, color: Colors.grey.shade600),
+                          Icon(
+                            Icons.history,
+                            size: 18,
+                            color: Colors.grey.shade600,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             'Select a saved ID',
@@ -521,7 +542,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                                  color: const Color(
+                                    0xFF3B82F6,
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Icon(
@@ -562,13 +585,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.5),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _fadeController,
-          curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic),
-        )),
+        position: Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _fadeController,
+                curve: const Interval(0.6, 1.0, curve: Curves.easeOutCubic),
+              ),
+            ),
         child: AnimatedScale(
           scale: _isLoading ? 0.98 : 1.0,
           duration: const Duration(milliseconds: 150),
@@ -586,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFF97316).withOpacity(0.5),
+                  color: const Color(0xFFF97316).withValues(alpha: 0.5),
                   blurRadius: 25,
                   offset: const Offset(0, 12),
                   spreadRadius: -5,
@@ -598,8 +621,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: InkWell(
                 onTap: _isLoading ? null : _checkBalance,
                 borderRadius: BorderRadius.circular(18),
-                splashColor: Colors.white.withOpacity(0.3),
-                highlightColor: Colors.white.withOpacity(0.1),
+                splashColor: Colors.white.withValues(alpha: 0.3),
+                highlightColor: Colors.white.withValues(alpha: 0.1),
                 child: Center(
                   child: _isLoading
                       ? Row(
@@ -610,7 +633,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -619,7 +644,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -631,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
