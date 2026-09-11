@@ -99,7 +99,11 @@ Future<String> solveTurnstile(BuildContext context) async {
     webViewController?.loadHtmlString('');
     final ctx = sheetContext;
     sheetContext = null;
-    if (ctx != null && ctx.mounted) {
+    // ctx.mounted only proves the sheet's element still exists, not that its
+    // route is still the topmost one — a prior barrier/swipe/back dismissal
+    // pops it without going through here. isCurrent guards against popping
+    // whatever route now sits on top instead.
+    if (ctx != null && ctx.mounted && (ModalRoute.of(ctx)?.isCurrent ?? false)) {
       Navigator.of(ctx).pop();
     }
   }
@@ -141,7 +145,8 @@ Future<String> solveTurnstile(BuildContext context) async {
           } else {
             completeError(_mapErrorType(type ?? ''));
           }
-        } catch (_) {
+        } catch (e) {
+          debugPrint('Turnstile message handling failed: $e');
           completeError('Verification failed, please try again.');
         }
       },
@@ -168,13 +173,19 @@ Future<String> solveTurnstile(BuildContext context) async {
     unawaited(
       controller
           .loadRequest(Uri.parse('https://amiapp.dpdc.org.bd/'))
-          .catchError((_) => completeError('Verification failed, please try again.')),
+          .catchError((Object e) {
+            debugPrint('Turnstile page load failed: $e');
+            completeError('Verification failed, please try again.');
+          }),
     );
   } else {
     unawaited(
       controller
           .loadHtmlString(turnstileHtml(), baseUrl: 'https://amiapp.dpdc.org.bd')
-          .catchError((_) => completeError('Verification failed, please try again.')),
+          .catchError((Object e) {
+            debugPrint('Turnstile page load failed: $e');
+            completeError('Verification failed, please try again.');
+          }),
     );
   }
 

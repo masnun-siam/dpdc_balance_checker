@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/balance_details.dart';
 import 'storage_service.dart';
@@ -33,9 +35,12 @@ class DpdcApiService {
   static const int _turnstileCodeTtlSeconds = 600;
 
   // Overall budget for fetchBalanceDetails, covering both attempts of the
-  // retry loop. Keeps a slow-but-successful run bounded well below the
-  // per-call 5 minute socket timeout stacked across two passes.
-  static const Duration _fetchBalanceOverallTimeout = Duration(seconds: 90);
+  // retry loop. The access-denied retry path requires a second interactive
+  // solve (up to 45s) plus user reaction time before any network call, so
+  // 90s was exhausted before the retry's own network calls even started.
+  // 150s still bounds the stacked-socket hang this budget exists for while
+  // leaving room for two interactive solves.
+  static const Duration _fetchBalanceOverallTimeout = Duration(seconds: 150);
 
   final StorageService _storageService = StorageService();
   final http.Client client;
@@ -121,6 +126,7 @@ class DpdcApiService {
           return await generateBearerToken(refreshToken: refreshToken);
         } catch (e) {
           // If refresh fails, generate a new token
+          debugPrint('Token refresh failed, generating new token: $e');
           return await generateBearerToken();
         }
       }
@@ -170,6 +176,11 @@ class DpdcApiService {
         customerId,
         solveTurnstile: solveTurnstile,
       ).timeout(_fetchBalanceOverallTimeout);
+    } on TimeoutException catch (e) {
+      // This is the aggregate budget above expiring, not a socket-level
+      // timeout — don't blame the user's connection for it.
+      debugPrint('fetchBalanceDetails overall budget exceeded: $e');
+      throw Exception('Verification took too long, please try again.');
     } catch (e) {
       if (e.toString().contains('SocketException') ||
           e.toString().contains('TimeoutException')) {
@@ -247,7 +258,8 @@ query {
         Map<String, dynamic>? decodedBody;
         try {
           decodedBody = json.decode(response.body) as Map<String, dynamic>;
-        } catch (_) {
+        } catch (e) {
+          debugPrint('Balance response body was not valid JSON: $e');
           decodedBody = null;
         }
 
