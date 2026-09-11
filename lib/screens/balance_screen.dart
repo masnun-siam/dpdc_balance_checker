@@ -222,7 +222,7 @@ Checked on: $dateStr
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
@@ -242,11 +242,11 @@ Checked on: $dateStr
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         blurRadius: 15,
                         spreadRadius: 2,
                       ),
@@ -290,7 +290,7 @@ Checked on: $dateStr
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF97316).withOpacity(0.5),
+                    color: const Color(0xFFF97316).withValues(alpha: 0.5),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                     spreadRadius: -5,
@@ -306,7 +306,7 @@ Checked on: $dateStr
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -359,10 +359,10 @@ Checked on: $dateStr
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(25),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         width: 1.5,
                       ),
                     ),
@@ -441,7 +441,7 @@ Checked on: $dateStr
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 30,
                 offset: const Offset(0, 15),
                 spreadRadius: -5,
@@ -459,8 +459,8 @@ Checked on: $dateStr
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF3B82F6).withOpacity(0.2),
-                          const Color(0xFF8B5CF6).withOpacity(0.2),
+                          const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                          const Color(0xFF8B5CF6).withValues(alpha: 0.2),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -529,13 +529,13 @@ Checked on: $dateStr
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF3B82F6).withOpacity(0.15),
-                  const Color(0xFF8B5CF6).withOpacity(0.15),
+                  const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                  const Color(0xFF8B5CF6).withValues(alpha: 0.15),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF3B82F6).withOpacity(0.2),
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -655,7 +655,7 @@ Checked on: $dateStr
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: -3,
@@ -667,8 +667,8 @@ Checked on: $dateStr
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(18),
-          splashColor: Colors.white.withOpacity(0.3),
-          highlightColor: Colors.white.withOpacity(0.1),
+          splashColor: Colors.white.withValues(alpha: 0.3),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
@@ -677,7 +677,7 @@ Checked on: $dateStr
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),

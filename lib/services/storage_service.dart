@@ -7,6 +7,8 @@ class StorageService {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _tokenExpiryKey = 'token_expiry';
+  static const String _turnstileCodeKey = 'turnstile_code';
+  static const String _turnstileCodeExpiryKey = 'turnstile_code_expiry';
 
   /// Save a customer ID with an optional label
   Future<void> saveCustomerId(String id, {String? label}) async {
@@ -177,6 +179,52 @@ class StorageService {
       await prefs.remove(_tokenExpiryKey);
     } catch (e) {
       throw Exception('Failed to clear tokens: ${e.toString()}');
+    }
+  }
+
+  /// Save the cached turnstile verification code.
+  ///
+  /// TTL is provisionally 10 minutes (see [getTurnstileCode]) pending the
+  /// issue's Phase 0b measurement of the server's actual code lifetime,
+  /// which needs a live server and has not been run yet.
+  Future<void> saveTurnstileCode(String code, {required int ttl}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_turnstileCodeKey, code);
+
+      // Calculate expiry time (current time + TTL in seconds)
+      final expiryTime = DateTime.now().millisecondsSinceEpoch + (ttl * 1000);
+      await prefs.setInt(_turnstileCodeExpiryKey, expiryTime);
+    } catch (e) {
+      throw Exception('Failed to save turnstile code: ${e.toString()}');
+    }
+  }
+
+  /// Get the cached turnstile code, or null if missing/expired.
+  Future<String?> getTurnstileCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final expiryTime = prefs.getInt(_turnstileCodeExpiryKey);
+      if (expiryTime == null) return null;
+
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      if (currentTime >= expiryTime) return null;
+
+      final code = prefs.getString(_turnstileCodeKey);
+      return (code == null || code.isEmpty) ? null : code;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Clear the cached turnstile code.
+  Future<void> clearTurnstileCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_turnstileCodeKey);
+      await prefs.remove(_turnstileCodeExpiryKey);
+    } catch (e) {
+      throw Exception('Failed to clear turnstile code: ${e.toString()}');
     }
   }
 }

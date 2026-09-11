@@ -83,10 +83,7 @@ class DpdcBalanceCheckerApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Color(0xFF3B82F6),
-              width: 2.5,
-            ),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -99,7 +96,7 @@ class DpdcBalanceCheckerApp extends StatelessWidget {
         ),
 
         // Enhanced card theme
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -108,7 +105,7 @@ class DpdcBalanceCheckerApp extends StatelessWidget {
         ),
 
         // Enhanced dialog theme
-        dialogTheme: DialogTheme(
+        dialogTheme: DialogThemeData(
           elevation: 10,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -132,10 +129,10 @@ class DpdcBalanceCheckerApp extends StatelessWidget {
         // Page transitions
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
           },
         ),
