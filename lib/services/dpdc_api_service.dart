@@ -126,7 +126,7 @@ class DpdcApiService {
           return await generateBearerToken(refreshToken: refreshToken);
         } catch (e) {
           // If refresh fails, generate a new token
-          debugPrint('Token refresh failed, generating new token: $e');
+          debugPrint('Token refresh failed, generating new token: ${e.runtimeType}');
           return await generateBearerToken();
         }
       }
@@ -259,7 +259,7 @@ query {
         try {
           decodedBody = json.decode(response.body) as Map<String, dynamic>;
         } catch (e) {
-          debugPrint('Balance response body was not valid JSON: $e');
+          debugPrint('Balance response body was not valid JSON: ${e.runtimeType}');
           decodedBody = null;
         }
 

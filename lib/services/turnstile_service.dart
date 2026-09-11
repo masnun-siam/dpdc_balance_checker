@@ -146,7 +146,7 @@ Future<String> solveTurnstile(BuildContext context) async {
             completeError(_mapErrorType(type ?? ''));
           }
         } catch (e) {
-          debugPrint('Turnstile message handling failed: $e');
+          debugPrint('Turnstile message handling failed: ${e.runtimeType}');
           completeError('Verification failed, please try again.');
         }
       },
