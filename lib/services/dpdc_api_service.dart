@@ -26,6 +26,17 @@ class DpdcApiService {
   static const String _clientSecret = '0yFsAl4nN9jX1GGkgOrvpUxDarf2DT40';
   static const String _tenantCode = 'DPDC';
 
+  // Provisionally 10 minutes pending the issue's Phase 0b measurement of the
+  // server's actual turnstile code lifetime, which needs a live server and
+  // has not been run yet. Lives here (not in storage_service.dart) because
+  // this is the call site that owns the TTL decision.
+  static const int _turnstileCodeTtlSeconds = 600;
+
+  // Overall budget for fetchBalanceDetails, covering both attempts of the
+  // retry loop. Keeps a slow-but-successful run bounded well below the
+  // per-call 5 minute socket timeout stacked across two passes.
+  static const Duration _fetchBalanceOverallTimeout = Duration(seconds: 90);
+
   final StorageService _storageService = StorageService();
   final http.Client client;
 
@@ -155,6 +166,27 @@ class DpdcApiService {
     required Future<String> Function() solveTurnstile,
   }) async {
     try {
+      return await _fetchBalanceDetailsUnbounded(
+        customerId,
+        solveTurnstile: solveTurnstile,
+      ).timeout(_fetchBalanceOverallTimeout);
+    } catch (e) {
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('TimeoutException')) {
+        throw Exception(
+            'Network error: Please check your internet connection.');
+      }
+      rethrow;
+    }
+  }
+
+  /// The actual fetch logic, with no overall time budget of its own — the
+  /// budget is applied once by the caller ([fetchBalanceDetails]) so it
+  /// covers both passes of the retry loop, not just a single call.
+  Future<BalanceDetails> _fetchBalanceDetailsUnbounded(
+    String customerId, {
+    required Future<String> Function() solveTurnstile,
+  }) async {
       // Get a valid bearer token (from cache or generate new)
       final token = await _getValidAccessToken();
 
@@ -189,7 +221,10 @@ query {
         if (turnstileCode == null) {
           final turnstileToken = await solveTurnstile();
           turnstileCode = await _verifyTurnstile(token, turnstileToken);
-          await _storageService.saveTurnstileCode(turnstileCode, ttl: 600);
+          await _storageService.saveTurnstileCode(
+            turnstileCode,
+            ttl: _turnstileCodeTtlSeconds,
+          );
         }
 
         final response = await client
@@ -205,14 +240,28 @@ query {
             )
             .timeout(const Duration(minutes: 5));
 
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body) as Map<String, dynamic>;
-          lastBody = data;
+        // Access denied can come back on a non-200 status too (e.g. 403), so
+        // this is checked before branching on statusCode — otherwise the
+        // self-healing retry would be unreachable in exactly the case it
+        // exists for.
+        Map<String, dynamic>? decodedBody;
+        try {
+          decodedBody = json.decode(response.body) as Map<String, dynamic>;
+        } catch (_) {
+          decodedBody = null;
+        }
 
-          if (isAccessDenied(data)) {
-            await _storageService.clearTurnstileCode();
-            continue;
+        if (decodedBody != null && isAccessDenied(decodedBody)) {
+          lastBody = decodedBody;
+          await _storageService.clearTurnstileCode();
+          continue;
+        }
+
+        if (response.statusCode == 200) {
+          if (decodedBody == null) {
+            throw Exception('Failed to parse balance response.');
           }
+          final data = decodedBody;
 
           // Check for other GraphQL errors
           if (data['errors'] != null &&
@@ -245,14 +294,6 @@ query {
         throw Exception('Verification failed. Please try again.');
       }
       throw Exception('Failed to fetch balance. Please try again.');
-    } catch (e) {
-      if (e.toString().contains('SocketException') ||
-          e.toString().contains('TimeoutException')) {
-        throw Exception(
-            'Network error: Please check your internet connection.');
-      }
-      rethrow;
-    }
   }
 
   /// Validate customer ID format

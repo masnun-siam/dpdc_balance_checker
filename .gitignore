@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Agent scratch/cache — not part of the shipped project
+.a5c/
+PLAN.md
+docs/superpowers/

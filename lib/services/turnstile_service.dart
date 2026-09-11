@@ -90,17 +90,32 @@ String _mapErrorType(String type) {
 /// challenge and resolves with the verification token.
 Future<String> solveTurnstile(BuildContext context) async {
   final completer = Completer<String>();
+  BuildContext? sheetContext;
+  WebViewController? webViewController;
+
+  // Pops the sheet (if still showing) and stops the WebView from holding a
+  // live page/timers once we're done with it, on every completion path.
+  void dismissSheet() {
+    webViewController?.loadHtmlString('');
+    final ctx = sheetContext;
+    sheetContext = null;
+    if (ctx != null && ctx.mounted) {
+      Navigator.of(ctx).pop();
+    }
+  }
 
   void completeError(String message) {
     if (!completer.isCompleted) {
       completer.completeError(Exception(message));
     }
+    dismissSheet();
   }
 
   void completeSuccess(String token) {
     if (!completer.isCompleted) {
       completer.complete(token);
     }
+    dismissSheet();
   }
 
   final controller = WebViewController()
@@ -131,6 +146,7 @@ Future<String> solveTurnstile(BuildContext context) async {
         }
       },
     );
+  webViewController = controller;
 
   if (_useRealPage) {
     controller.setNavigationDelegate(
@@ -164,7 +180,8 @@ Future<String> solveTurnstile(BuildContext context) async {
       context: context,
       isDismissible: true,
       enableDrag: true,
-      builder: (sheetContext) {
+      builder: (context) {
+        sheetContext = context;
         return SizedBox(
           height: 200,
           child: Column(
@@ -190,6 +207,7 @@ Future<String> solveTurnstile(BuildContext context) async {
   return completer.future.timeout(
     const Duration(seconds: 45),
     onTimeout: () {
+      completeError('Verification timed out, please try again.');
       throw Exception('Verification timed out, please try again.');
     },
   );
