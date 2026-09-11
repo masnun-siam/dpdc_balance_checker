@@ -80,6 +80,7 @@ void main() {
 
     expect(result, isNotNull);
     expect(balanceCalls, 1);
+    expect(solveCalls, 1);
   });
 
   test(
@@ -117,6 +118,7 @@ void main() {
 
     expect(result, isNotNull);
     expect(balanceCalls, 2);
+    expect(solveCalls, 2);
   });
 
   test('both attempts access denied: exactly two attempts then throws',
@@ -153,6 +155,7 @@ void main() {
     );
 
     expect(balanceCalls, 2);
+    expect(solveCalls, 2);
   });
 
   test('cache hit: zero calls to solveTurnstile and zero verify-turnstile POSTs',
